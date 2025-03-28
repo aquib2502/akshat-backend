@@ -67,105 +67,99 @@ export const getStartingFeedbackQuestion = async (req, res) => {
 
 // Controller to submit feedback responses and process them via Gemini API
 export const submitFeedbackReport = async (req, res) => {
-    try {
-      const { appointmentId, responses } = req.body;
-  
-      if (!appointmentId || !responses || Object.keys(responses).length === 0) {
-        return res.status(400).json({ success: false, message: "Appointment ID and responses are required." });
-      }
-  
-      // Format the prompt for the Gemini API
-      const prompt = `Summarize the following feedback responses for expert review in short:\n${JSON.stringify(responses, null, 2)}`;
-  
-      // Call the Gemini API with retries
-      const geminiResponse = await fetchWithRetry(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: prompt,
-                  },
-                ],
-              },
-            ],
-          }),
-          timeout: 10000, // Timeout set to 10 seconds
-        }
-      );
-  
-      // Check if the response is okay
-      if (!geminiResponse.ok) {
-        const errorText = await geminiResponse.text();
-        console.error("Gemini API Response Error:", errorText);
-        throw new Error(`Gemini API Error: ${geminiResponse.statusText}`);
-      }
-  
-      // Parse the response from Gemini
-      const data = await geminiResponse.json();
-      console.log("Gemini API Response Data:", data);  // Log the response for debugging
-  
-      // Check if the response contains the correct structure
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        console.error("Gemini API response does not contain the expected 'content' in candidates.");
-        throw new Error("Gemini API response does not contain the expected 'content' in candidates.");
-      }
-  
-      // If the content is an object, extract the actual string
-      const summary = typeof data.candidates[0].content === 'object' ? JSON.stringify(data.candidates[0].content) : data.candidates[0].content;
-  
-      // Log the summary
-      console.log("Formatted Summary from Gemini:", summary);
-  
-      // Save the feedback report to the database
-      const feedbackReport = await FeedbackReport.create({
-        appointmentId,
-        responses,
-        feedbackSummary: summary,  // Save the summary in the database
-      });
-  
-      // Update the appointment status to "report sent"
-      await Appointment.findByIdAndUpdate(appointmentId, { status: "report sent" });
-  
-      res.status(200).json({ success: true, feedbackSummary: summary });
-    } catch (error) {
-      console.error("Error in submitFeedbackReport:", error);
-      res.status(500).json({
-        success: false,
-        message: error.message || "Failed to generate feedback report from responses.",
-      });
+  try {
+    const { appointmentId, responses } = req.body;
+
+    // Check if the required data exists
+    if (!appointmentId || !responses || Object.keys(responses).length === 0) {
+      return res.status(400).json({ success: false, message: "Appointment ID and responses are required." });
     }
-  };
-  
-  export const getFeedbackReport = async (req, res) => {
-    try {
-      const { appointmentId, userName } = req.query; // Get the appointmentId and userName from the query
-  
-      let query = {};
-      if (appointmentId) {
-        query.appointmentId = appointmentId;
-      }
-      if (userName) {
-        query["responses.userName"] = userName; // Assuming the responses contain userName if it's necessary for filtering
-      }
-  
-      // Fetch the feedback reports based on the query
-      const feedbackReports = await FeedbackReport.find(query).populate("appointmentId").populate("reviewedBy");
-  
-      if (!feedbackReports || feedbackReports.length === 0) {
-        return res.status(404).json({ success: false, message: "No feedback reports found." });
-      }
-  
-      // Return the feedback reports
-      res.status(200).json({ success: true, feedbackReports });
-    } catch (error) {
-      console.error("Error fetching feedback reports:", error);
-      res.status(500).json({ success: false, message: "Failed to fetch feedback reports" });
+
+    // Fetch the appointment based on the appointmentId
+    const appointment = await Appointment.findById(appointmentId).populate('user', 'name');  // Populate the user field (only 'name' for simplicity)
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found." });
     }
-  };
+
+    // Extract userId, name from the populated user field, and mobile from the appointment document
+    const userId = appointment.user._id;
+    const userName = appointment.user.name;
+    const userMobile = appointment.mobile;  // Extract the mobile directly from the appointment document
+
+    // Check if the mobile number is missing
+    if (!userMobile) {
+      return res.status(400).json({ success: false, message: "Mobile number is missing for the user." });
+    }
+
+    // Format the prompt for the Gemini API
+    const prompt = `Summarize the following feedback responses for expert review in short:\n${JSON.stringify(responses, null, 2)}`;
+
+    // Call the Gemini API with retries
+    const geminiResponse = await fetchWithRetry(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
+        timeout: 10000, // Timeout set to 10 seconds
+      }
+    );
+
+    // Check if the response is okay
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      console.error("Gemini API Response Error:", errorText);
+      throw new Error(`Gemini API Error: ${geminiResponse.statusText}`);
+    }
+
+    // Parse the response from Gemini
+    const data = await geminiResponse.json();
+    console.log("Gemini API Response Data:", data);  // Log the response for debugging
+
+    // Check if the response contains the correct structure
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      console.error("Gemini API response does not contain the expected 'content' in candidates.");
+      throw new Error("Gemini API response does not contain the expected 'content' in candidates.");
+    }
+
+    // If the content is an object, extract the actual string
+    const summary = typeof data.candidates[0].content === 'object' ? JSON.stringify(data.candidates[0].content) : data.candidates[0].content;
+
+    // Log the summary
+    console.log("Formatted Summary from Gemini:", summary);
+
+    // Save the feedback report to the database, including the userId, name, and mobile
+    const feedbackReport = await FeedbackReport.create({
+      appointmentId,
+      userId,  // Link the feedback report to the user
+      userName,  // Save the user's name
+      userMobile,  // Save the user's mobile number
+      responses,
+      feedbackSummary: summary,  // Save the summary in the database
+    });
+
+    // Update the appointment status to "report sent"
+    await Appointment.findByIdAndUpdate(appointmentId, { status: "report sent" });
+
+    res.status(200).json({ success: true, feedbackSummary: summary });
+  } catch (error) {
+    console.error("Error in submitFeedbackReport:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to generate feedback report from responses.",
+    });
+  }
+};
+

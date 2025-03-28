@@ -1,6 +1,6 @@
 import express from 'express';
 import { registerUser, loginUser,getUserProfile
-    ,updateUserProfile,changeUserPassword,
+    ,updateUserProfile,changeUserPassword,getExpertFeedback
     }
      from '../controllers/userController.js';
 
@@ -22,6 +22,9 @@ router.put('/profile', protect , updateUserProfile);
 
 //change user password
 router.patch('/change-password',protect,changeUserPassword);
+
+
+router.get("/feedback-report",protect,  getExpertFeedback);
 
 
 

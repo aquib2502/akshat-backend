@@ -3,8 +3,21 @@ import mongoose from 'mongoose';
 const feedbackReportSchema = new mongoose.Schema({
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Appointment',  // Reference to the appointment
+    ref: 'Appointment',
     required: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',  // Link to the user who made the appointment
+    required: true,
+  },
+  userName: {
+    type: String,
+    required: true,  // Save the user's name
+  },
+  userMobile: {
+    type: String,
+    required: true,  // Save the user's mobile number
   },
   responses: {
     type: Object,

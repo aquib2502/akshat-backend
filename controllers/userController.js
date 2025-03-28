@@ -2,6 +2,7 @@ import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer'
+import FeedbackReport from '../models/feedbackReportModel.js';
 
 // @desc Register new user
 // @route POST /api/auth/register
@@ -247,3 +248,21 @@ export const changeUserPassword = async (req, res) => {
     }
 };
 
+export const getExpertFeedback = async (req, res) => {
+    try {
+      const userId = req.user._id;  // Extract userId from the decoded token (set by the protect middleware)
+  
+      // Fetch all feedback reports associated with the logged-in user
+      const feedbackReports = await FeedbackReport.find({ userId });
+  
+      if (!feedbackReports || feedbackReports.length === 0) {
+        return res.status(404).json({ success: false, message: 'No feedback reports found for this user.' });
+      }
+  
+      res.status(200).json({ success: true, feedbackReports });
+    } catch (error) {
+      console.error('Error fetching feedback reports:', error);
+      res.status(500).json({ success: false, message: 'Failed to fetch feedback reports' });
+    }
+  };
+  

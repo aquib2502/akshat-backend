@@ -218,30 +218,30 @@ export const updateExpertProfile = async (req, res) => {
   }
 };
   // In expertController.js
-  export const getExpertSummary = async (req, res) => {
-    try {
-      const { userName } = req.query;  // Name of the user who booked the appointment
-  
-      // Fetch all appointments based on user name
-      const appointments = await Appointment.find({ "user.name": userName });
-  
-      if (!appointments || appointments.length === 0) {
-        return res.status(404).json({ success: false, message: 'No appointment found for this user.' });
+    export const getExpertSummary = async (req, res) => {
+      try {
+        const { userName } = req.query;  // Name of the user who booked the appointment
+    
+        // Fetch all appointments based on user name
+        const appointments = await Appointment.find({ "user.name": userName });
+    
+        if (!appointments || appointments.length === 0) {
+          return res.status(404).json({ success: false, message: 'No appointment found for this user.' });
+        }
+    
+        // Fetch all summaries associated with the user
+        const summaries = await Summary.find({ "user.name": userName });
+    
+        if (!summaries || summaries.length === 0) {
+          return res.status(404).json({ success: false, message: 'No summaries found for this user.' });
+        }
+    
+        res.status(200).json({ success: true, summaries });
+      } catch (error) {
+        console.error('Error fetching summaries:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch summaries' });
       }
-  
-      // Fetch all summaries associated with the user
-      const summaries = await Summary.find({ "user.name": userName });
-  
-      if (!summaries || summaries.length === 0) {
-        return res.status(404).json({ success: false, message: 'No summaries found for this user.' });
-      }
-  
-      res.status(200).json({ success: true, summaries });
-    } catch (error) {
-      console.error('Error fetching summaries:', error);
-      res.status(500).json({ success: false, message: 'Failed to fetch summaries' });
-    }
-  };
+    };
 
   export const confirmAppointment = async (req, res) => {
       const { appointmentId, status } = req.body;

@@ -1,5 +1,6 @@
 import express from 'express';
-import { getStartingFeedbackQuestion, getNextFeedbackQuestion, submitFeedbackReport, getFeedbackReport } from '../controllers/feedbackController.js';
+import { getStartingFeedbackQuestion, getNextFeedbackQuestion, submitFeedbackReport } from '../controllers/feedbackController.js';
+import { protect } from '../middleware/userMiddleware.js';
 
 const router = express.Router();
 
@@ -12,6 +13,5 @@ router.get('/:nextQuestionId', getNextFeedbackQuestion);
 // POST endpoint to submit the feedback responses
 router.post("/submit", submitFeedbackReport);
 
-router.get("/feedback-report", getFeedbackReport);
 
 export default router;

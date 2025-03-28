@@ -143,3 +143,29 @@ export const submitFeedbackReport = async (req, res) => {
     }
   };
   
+  export const getFeedbackReport = async (req, res) => {
+    try {
+      const { appointmentId, userName } = req.query; // Get the appointmentId and userName from the query
+  
+      let query = {};
+      if (appointmentId) {
+        query.appointmentId = appointmentId;
+      }
+      if (userName) {
+        query["responses.userName"] = userName; // Assuming the responses contain userName if it's necessary for filtering
+      }
+  
+      // Fetch the feedback reports based on the query
+      const feedbackReports = await FeedbackReport.find(query).populate("appointmentId").populate("reviewedBy");
+  
+      if (!feedbackReports || feedbackReports.length === 0) {
+        return res.status(404).json({ success: false, message: "No feedback reports found." });
+      }
+  
+      // Return the feedback reports
+      res.status(200).json({ success: true, feedbackReports });
+    } catch (error) {
+      console.error("Error fetching feedback reports:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch feedback reports" });
+    }
+  };

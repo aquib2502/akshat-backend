@@ -8,7 +8,7 @@ const MAX_APPOINTMENTS = 5; // Max number of appointments a user can book
 // 🟢 Book an Appointment with Max Limit Constraint
 export const bookAppointment = async (req, res) => {
     const { type, date, time, name, mobile, mode } = req.body;
-  
+
     // Validate required fields
     if (!type || !date || !time || !name || !mobile || !mode) {
       return res.status(400).json({
@@ -16,25 +16,32 @@ export const bookAppointment = async (req, res) => {
         message: "All fields (type, date, time, name, mobile, mode) are required.",
       });
     }
-  
+
     try {
       const userId = req.user.id;
-  
-      // Count existing appointments by user
-      const existingAppointments = await Appointment.countDocuments({ user: userId });
 
-      if (existingAppointments >= MAX_APPOINTMENTS) {
+      // 🟢 Check if the selected date and time is already booked
+      const existingAppointment = await Appointment.findOne({ date, time });
+      if (existingAppointment) {
+        return res.status(400).json({
+          success: false,
+          message: "The selected date and time is already booked. Please choose a different time.",
+        });
+      }
+
+      // 🟢 Count existing appointments by user
+      const userAppointments = await Appointment.countDocuments({ user: userId });
+
+      if (userAppointments >= MAX_APPOINTMENTS) {
         return res.status(400).json({
           success: false,
           message: "You have reached the maximum limit of 5 appointments.",
         });
       }
-  
-      // You can also check if questionnaire already filled:
-      // const questionnaireFilled = await Questionnaire.findOne({ user: userId });
-  
-      const isFirstAppointment = existingAppointments === 0;
-  
+
+      const isFirstAppointment = userAppointments === 0;
+
+      // 🟢 Create a new appointment
       const appointment = new Appointment({
         user: userId,
         type,
@@ -46,9 +53,9 @@ export const bookAppointment = async (req, res) => {
         status: "pending", // Default
         paymentStatus: "completed", // Free appointments
       });
-  
+
       await appointment.save();
-  
+
       res.status(201).json({
         success: true,
         message: isFirstAppointment
@@ -61,7 +68,7 @@ export const bookAppointment = async (req, res) => {
       console.error("Book Appointment Error:", error);
       res.status(500).json({ success: false, message: "Failed to book appointment." });
     }
-  };
+};
   
 // 🟡 Initiate Payment (Generate Payment Link)
 // This section is commented out because we are not using payment integration now.

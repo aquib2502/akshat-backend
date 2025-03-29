@@ -92,7 +92,7 @@ export const submitFeedbackReport = async (req, res) => {
     }
 
     // Format the prompt for the Gemini API
-    const prompt = `Summarize the following feedback responses for expert review in short:\n${JSON.stringify(responses, null, 2)}`;
+    const prompt = `Make a report of the following responses for the pateint in brief :\n${JSON.stringify(responses, null, 2)}`;
 
     // Call the Gemini API with retries
     const geminiResponse = await fetchWithRetry(
@@ -155,7 +155,7 @@ export const submitFeedbackReport = async (req, res) => {
 
     res.status(200).json({ success: true, feedbackSummary: summary });
   } catch (error) {
-    console.error("Error in submitFeedbackReport:", error);
+    console.error("Submitted Report Successfully:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Failed to generate feedback report from responses.",

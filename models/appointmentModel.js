@@ -9,14 +9,14 @@ const appointmentSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    // enum: [
-    //   "Career Guidance",
-    //   "Parenting",
-    //   "Family/Couple Counselling",
-    //   "Depression/Anxiety/Stress",
-    //   "Suicidal Thoughts",
-    //   "Children/ Teen/ Students Counselling"
-    // ]
+    enum: [
+      "Career Guidance",
+      "Parenting",
+      "Family/Couple Counselling",
+      "Depression/Anxiety/Stress",
+      "Suicidal Thoughts",
+      "Children/ Teen/ Students Counselling"
+    ]
   },
   date: {
     type: Date,

@@ -5,7 +5,6 @@ const questionSchema = new mongoose.Schema({
   questionId: {
     type: Number,
     required: true,
-    unique: true,
   },
   category: {
     type: String,
@@ -16,7 +15,7 @@ const questionSchema = new mongoose.Schema({
       "Family/Couple Counselling",
       "Depression/Anxiety/Stress",
       "Suicidal Thoughts",
-      "Children/ Teen / Students Counselling",
+      "Children/Teen/Students Counselling",
     ],
   },
   text: {
@@ -40,6 +39,8 @@ const questionSchema = new mongoose.Schema({
     },
   },
 });
+
+questionSchema.index({ category: 1, questionId: 1 }, { unique: true });
 
 const Question = mongoose.models.Question || mongoose.model("Question", questionSchema);
 export default Question;

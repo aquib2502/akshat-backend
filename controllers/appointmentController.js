@@ -22,6 +22,13 @@ export const bookAppointment = async (req, res) => {
   
       // Count existing appointments by user
       const existingAppointments = await Appointment.countDocuments({ user: userId });
+
+      if (existingAppointments >= MAX_APPOINTMENTS) {
+        return res.status(400).json({
+          success: false,
+          message: "You have reached the maximum limit of 5 appointments.",
+        });
+      }
   
       // You can also check if questionnaire already filled:
       // const questionnaireFilled = await Questionnaire.findOne({ user: userId });

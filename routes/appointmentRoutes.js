@@ -22,6 +22,17 @@ router.post('/book', protect, bookAppointment);
 
 // 🔍 Get User's Appointments
 router.get('/user', protect, getUserAppointments);
+//check booked slots
+router.get("/booked-slots", async (req, res) => {
+    try {
+      const bookedSlots = await Appointment.find({}, "date time"); // Fetch booked date-time
+  
+      res.status(200).json({ success: true, bookedSlots });
+    } catch (error) {
+      console.error("Fetch Booked Slots Error:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch booked slots." });
+    }
+  });
 
 
 

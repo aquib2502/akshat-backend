@@ -15,7 +15,7 @@ const appointmentSchema = new mongoose.Schema({
       "Family/Couple Counselling",
       "Depression/Anxiety/Stress",
       "Suicidal Thoughts",
-      "Children/ Teen/ Students Counselling"
+      "Children/Teen/Students Counselling"
     ]
   },
   date: {

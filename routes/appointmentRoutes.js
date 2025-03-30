@@ -8,6 +8,7 @@ import {
 import { protect } from '../middleware/authMiddleware.js';
 import { authenticateExpert } from '../middleware/expertMiddleware.js';
 // import { getExpertProfile } from '../controllers/expertController.js';
+import Appointment from '../models/appointmentModel.js';
 
 const router = express.Router();
 

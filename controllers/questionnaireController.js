@@ -2,6 +2,7 @@ import Question from "../models/questionnaireModel.js";
 import Summary from "../models/summaryModel.js";
 import dotenv from 'dotenv';
 import fetchwithRetry from "../utils/fetchwithRetry.js"; // For retrying API requests
+import Appointment from "../models/appointmentModel.js";
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ export const getStartingQuestion = async (req, res) => {
   }
 };
 
-// Controller to get the next question based on the current answer
+
 // Controller to get the next question based on the current answer
 export const getNextQuestion = async (req, res) => {
   try {
@@ -69,8 +70,17 @@ export const submitQuestionnaire = async (req, res) => {
       return res.status(400).json({ success: false, message: "Appointment ID and responses are required." });
     }
 
+    // Fetch the appointment details from the Appointment model
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found." });
+    }
+
+    const { name, type, mode } = appointment;
+
     // Format the prompt for the Gemini API
-    const prompt = `Summarize the  following questionnaire responses for expert review in short:\n${JSON.stringify(responses, null, 2)}`;
+    const prompt = `Summarize the following questionnaire responses for expert review in paragraph with highlighting key words:\n${JSON.stringify(responses, null, 2)}`;
 
     // Call the Gemini API with retries
     const geminiResponse = await fetchWithRetry(
@@ -118,9 +128,12 @@ export const submitQuestionnaire = async (req, res) => {
     // Log the summary
     console.log("Formatted Summary from Gemini:", summary);
 
-    // Save the summary and responses to the database
+    // Save the summary, responses, and appointment details to the database
     await Summary.create({
       appointmentId,
+      name,  // Save the name from the appointment
+      type,  // Save the type from the appointment
+      mode,  // Save the mode from the appointment
       responses,
       summary,  // Save the summary in the database
     });

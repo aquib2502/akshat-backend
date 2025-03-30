@@ -6,6 +6,18 @@ const summarySchema = new mongoose.Schema({
     ref: 'Appointment',  // Reference to the appointment
     required: true,
   },
+  name: {
+    type: String,
+    required: true, // Make sure these fields are required in Summary schema
+  },
+  mode: {
+    type: String,
+    required: true,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
   responses: {
     type: Object,
     required: true,
